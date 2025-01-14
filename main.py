@@ -1,11 +1,21 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 import time
 
 ACCOUNT_EMAIL = "email id used to log into LinkedIn"
 ACCOUNT_PASSWORD = 'password used to log into LinkedIn'
 PHONE = "your phone number"
+
+
+def abort_application():
+    close_button = driver.find_element(by=By.CLASS_NAME, value="artdeco-modal__dismiss")
+    close_button.click()
+
+    time.sleep(2)
+    discard_button = driver.find_elements(by=By.CLASS_NAME, value="artdeco-modal__confirm-dialog-btn")[1]
+    discard_button.click()
 
 
 chrome_options = webdriver.ChromeOptions()
@@ -16,27 +26,55 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.get("LinkedIn link with your preferred job title and location with easy apply selected")
 
 time.sleep(2)
-sign_in_button = driver.find_element(by=By.XPATH, value="/html/body/div[5]/div/div/section/div/div/div/div[2]/button")
+reject_button = driver.find_element(by=By.CSS_SELECTOR, value='button[action-type="DENY"]')
+reject_button.click()
+
+time.sleep(2)
+sign_in_button = driver.find_element(by=By.LINK_TEXT, value="Sign in")
 sign_in_button.click()
 
 time.sleep(5)
-email_field = driver.find_element(by=By.XPATH, value="/html/body/div[5]/div/div/section/div/div/form/div[1]/div[1]/div/div/input")
+email_field = driver.find_element(by=By.ID, value="username")
 email_field.send_keys(ACCOUNT_EMAIL)
-password_field = driver.find_element(by=By.XPATH, value="/html/body/div[5]/div/div/section/div/div/form/div[1]/div[2]/div/div/input")
+password_field = driver.find_element(by=By.ID, value="password")
 password_field.send_keys(ACCOUNT_PASSWORD)
 password_field.send_keys(Keys.ENTER)
 
 input("Press Enter when you have solved the Captcha")
 
 time.sleep(5)
-apply_button = driver.find_element(by=By.CSS_SELECTOR, value=".jobs-s-apply button")
-apply_button.click()
+all_listings = driver.find_elements(by=By.CSS_SELECTOR, value=".job-card-container--clickable")
+
+for listing in all_listings:
+    print("Opening Listing")
+    listing.click()
+    time.sleep(2)
+    try:
+        apply_button = driver.find_element(by=By.CSS_SELECTOR, value=".jobs-s-apply button")
+        apply_button.click()
+
+        time.sleep(5)
+        phone = driver.find_element(by=By.CSS_SELECTOR, value="input[id*=phoneNumber]")
+        if phone.text == "":
+            phone.send_keys(PHONE)
+
+        submit_button = driver.find_element(by=By.CSS_SELECTOR, value="footer button")
+        if submit_button.get_attribute("data-control-name") == "continue_unify":
+            abort_application()
+            print("Complex application, skipped.")
+            continue
+        else:
+            print("Submitting job application")
+            submit_button.click()
+
+        time.sleep(2)
+        close_button = driver.find_element(by=By.CLASS_NAME, value="artdeco-modal__dismiss")
+        close_button.click()
+
+    except NoSuchElementException:
+        abort_application()
+        print("No application button, skipped.")
+        continue
 
 time.sleep(5)
-phone = driver.find_element(by=By.CSS_SELECTOR, value="input[id*=phoneNumber]")
-if phone.text == "":
-    phone.send_keys(PHONE)
-
-submit_button = driver.find_element(by=By.CSS_SELECTOR, value="footer button")
-submit_button.click()
-
+driver.quit()
