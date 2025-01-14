@@ -5,6 +5,7 @@ import time
 
 ACCOUNT_EMAIL = "email id used to log into LinkedIn"
 ACCOUNT_PASSWORD = 'password used to log into LinkedIn'
+PHONE = "your phone number"
 
 
 chrome_options = webdriver.ChromeOptions()
@@ -12,7 +13,7 @@ chrome_options.add_experimental_option("detach", True)
 
 driver = webdriver.Chrome(options=chrome_options)
 
-driver.get("LinkedIn link with your preferred job title and location with "easy apply" selected")
+driver.get("LinkedIn link with your preferred job title and location with easy apply selected")
 
 time.sleep(2)
 sign_in_button = driver.find_element(by=By.XPATH, value="/html/body/div[5]/div/div/section/div/div/div/div[2]/button")
@@ -26,3 +27,16 @@ password_field.send_keys(ACCOUNT_PASSWORD)
 password_field.send_keys(Keys.ENTER)
 
 input("Press Enter when you have solved the Captcha")
+
+time.sleep(5)
+apply_button = driver.find_element(by=By.CSS_SELECTOR, value=".jobs-s-apply button")
+apply_button.click()
+
+time.sleep(5)
+phone = driver.find_element(by=By.CSS_SELECTOR, value="input[id*=phoneNumber]")
+if phone.text == "":
+    phone.send_keys(PHONE)
+
+submit_button = driver.find_element(by=By.CSS_SELECTOR, value="footer button")
+submit_button.click()
+
